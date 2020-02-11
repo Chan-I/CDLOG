@@ -23,11 +23,9 @@ depcomp
 install-sh
 .libs
 libtool
-libzlog.so*
-libzlog.a*
+libcdlog.so*
+libcdlog.a*
 ltmain.sh
-Makefile
-Makefile.in
 missing
 stamp-h1
 tags
