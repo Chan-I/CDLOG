@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "zlog.h"
+#include "cdlog.h"
 
 int main(int argc, char** argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	dzlog_init(NULL, "AA");
+	dcdlog_init(NULL, "AA");
 
 
 	i = atoi(argv[1]);
@@ -36,15 +36,15 @@ int main(int argc, char** argv)
 	aa[i/8] |=  ~(0xFF << (8 - i % 8));
 	memset(aa + i/8 + 1, 0xFF, sizeof(aa) - i/8 - 1);
 
-	hdzlog_info(aa, sizeof(aa));
+	hdcdlog_info(aa, sizeof(aa));
 
-	dzlog_info("%0x", aa[j/8]);
-	dzlog_info("%0x", aa[j/8] >> 6);
+	dcdlog_info("%0x", aa[j/8]);
+	dcdlog_info("%0x", aa[j/8] >> 6);
 
 	/* see j of bits fits */
-	dzlog_info("%0x", ~((aa[j/8] >> (7 - j % 8)) & 0x01) );
+	dcdlog_info("%0x", ~((aa[j/8] >> (7 - j % 8)) & 0x01) );
 
-	zlog_fini();
+	cdlog_fini();
 	
 	return 0;
 }

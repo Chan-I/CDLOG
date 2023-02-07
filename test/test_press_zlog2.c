@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "zlog.h"
+#include "cdlog.h"
 
 static long loop_count;
 
@@ -25,12 +25,12 @@ void * work(void *ptr)
 	long j = loop_count;
 	char category[20];
 	sprintf(category, "cat%ld", (long)ptr);
-	zlog_category_t *zc;
+	cdlog_category_t *zc;
 
-	zc = zlog_get_category(category);
+	zc = cdlog_get_category(category);
 	
 	while(j-- > 0) {
-		zlog_info(zc, "loglog");
+		cdlog_info(zc, "loglog");
 	}
 	return 0;
 }
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-        rc = zlog_init("test_press_zlog2.conf");
+        rc = cdlog_init("test_press_cdlog2.conf");
         if (rc) {
                 printf("init failed\n");
                 return 2;
@@ -84,6 +84,6 @@ int main(int argc, char** argv)
 	loop_count = atol(argv[3]);
 	test(atol(argv[1]), atol(argv[2]));
 
-	zlog_fini();
+	cdlog_fini();
 	return 0;
 }

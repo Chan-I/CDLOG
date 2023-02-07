@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "zlog.h"
+#include "cdlog.h"
 #include "stdlib.h"
 
 static int ReadTotalFile( FILE * fp , char ** ptr , long * len )
@@ -82,30 +82,30 @@ int main(int argc, char** argv)
 
 	ntimes = atoi(argv[2]);
 	
-	zlog_category_t *zc;
+	cdlog_category_t *zc;
 
-	rc = zlog_init("test_hex.conf");
+	rc = cdlog_init("test_hex.conf");
 	if (rc) {
 		printf("init failed\n");
 		return -1;
 	}
 	
-	zc = zlog_get_category("my_cat");
+	zc = cdlog_get_category("my_cat");
 	if (!zc) {
 		printf("get category failed\n");
-		zlog_fini();
+		cdlog_fini();
 		return -2;
 	}
 
 
 	rc = ReadTotalFile(fp, &dmp, &dmp_len);
 
-	while(ntimes--) hzlog_debug(zc, dmp, dmp_len);
+	while(ntimes--) hcdlog_debug(zc, dmp, dmp_len);
 
 	fclose(fp);
 	free(dmp);
 
-	zlog_fini();
+	cdlog_fini();
 	printf("hex log end\n");
 	
 	return 0;

@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -7,9 +7,9 @@
  */
 
 #include <stdio.h>
-#include "zlog.h"
+#include "cdlog.h"
 
-int output(zlog_msg_t *msg)
+int output(cdlog_msg_t *msg)
 {
 	printf("[mystd]:[%s][%s][%ld]\n", msg->path, msg->buf, (long)msg->len);
 	return 0;
@@ -18,24 +18,24 @@ int output(zlog_msg_t *msg)
 int main(int argc, char** argv)
 {
 	int rc;
-	zlog_category_t *zc;
+	cdlog_category_t *zc;
 
-	rc = zlog_init("test_record.conf");
+	rc = cdlog_init("test_record.conf");
 	if (rc) {
 		printf("init failed\n");
 		return -1;
 	}
 
-	zlog_set_record("myoutput", output);
+	cdlog_set_record("myoutput", output);
 
-	zc = zlog_get_category("my_cat");
+	zc = cdlog_get_category("my_cat");
 	if (!zc) {
 		printf("get cat fail\n");
-		zlog_fini();
+		cdlog_fini();
 		return -2;
 	}
 
-	zlog_info(zc, "hello, zlog");
-	zlog_fini();
+	cdlog_info(zc, "hello, cdlog");
+	cdlog_fini();
 	return 0;
 }

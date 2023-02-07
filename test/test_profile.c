@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -7,23 +7,23 @@
  */
 
 #include <stdio.h>
-#include "zlog.h"
+#include "cdlog.h"
 
 int main(int argc, char** argv)
 {
 	int rc;
 
-	rc = dzlog_init("test_profile.conf", "my_cat");
+	rc = dcdlog_init("test_profile.conf", "my_cat");
 	if (rc) {
 		printf("init failed\n");
 		return -1;
 	}
 
-	dzlog_info("hello, zlog");
+	dcdlog_info("hello, cdlog");
 
-	zlog_profile();
+	cdlog_profile();
 
-	zlog_fini();
+	cdlog_fini();
 	
 	return 0;
 }

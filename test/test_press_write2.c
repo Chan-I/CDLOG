@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "zlog.h"
+#include "cdlog.h"
 
 static long loop_count;
 
@@ -23,7 +23,7 @@ static long loop_count;
 void * work(void *ptr)
 {
 	long j = loop_count;
-    static char log[] = "2012-06-14 20:30:38.481187 INFO   24536:140716226213632:test_press_zlog.c:36 loglog\n";
+    static char log[] = "2012-06-14 20:30:38.481187 INFO   24536:140716226213632:test_press_cdlog.c:36 loglog\n";
 	char file[20];
 
 	sprintf(file, "press.%ld.log", (long)ptr);

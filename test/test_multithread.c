@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2017 by Philippe Corbes <philippe.corbes@gmail.com>
  *
@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
-#include "zlog.h"
+#include "cdlog.h"
 
 #define CONFIG            "test_multithread.conf"
 #define NB_THREADS        200
@@ -31,19 +31,19 @@ enum {
 	/* must equals conf file setting */
 };
 
-#define zlog_trace(cat, format, args...) \
-	zlog(cat, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+#define cdlog_trace(cat, format, args...) \
+	cdlog(cat, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
 	ZLOG_LEVEL_TRACE, format, ##args)
 
-#define zlog_security(cat, format, args...) \
-	zlog(cat, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+#define cdlog_security(cat, format, args...) \
+	cdlog(cat, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
 	ZLOG_LEVEL_SECURITY, format, ##args)
 
 
 struct thread_info {    /* Used as argument to thread_start() */
 	pthread_t thread_id;    /* ID returned by pthread_create() */
 	int       thread_num;   /* Application-defined thread # */
-	zlog_category_t *zc;    /* The logger category struc address; (All threads will use the same category, so he same address) */
+	cdlog_category_t *zc;    /* The logger category struc address; (All threads will use the same category, so he same address) */
 	long long int loop;     /* Counter incremented to check the thread's health */
 };
 
@@ -68,14 +68,14 @@ void intercept(int sig)
 
     free(tinfo);
 
-    zlog_fini();
+    cdlog_fini();
 }
 
 void *myThread(void *arg)
 {
     struct thread_info *tinfo = arg;
 
-    tinfo->zc = zlog_get_category("thrd");
+    tinfo->zc = cdlog_get_category("thrd");
 	if (!tinfo->zc) {
 		printf("get thrd %d cat fail\n", tinfo->thread_num);
 	}
@@ -84,7 +84,7 @@ void *myThread(void *arg)
 		while(1)
 		{
 			usleep(THREAD_LOOP_DELAY);
-			zlog_info(tinfo->zc, "%d;%lld", tinfo->thread_num, tinfo->loop++);
+			cdlog_info(tinfo->zc, "%d;%lld", tinfo->thread_num, tinfo->loop++);
 		}
 	}
 
@@ -94,9 +94,9 @@ void *myThread(void *arg)
 int main(int argc, char** argv)
 {
 	int rc;
-	zlog_category_t *zc;
-	zlog_category_t *mc;
-	zlog_category_t *hl;
+	cdlog_category_t *zc;
+	cdlog_category_t *mc;
+	cdlog_category_t *hl;
 	int i = 0;
 	struct stat stat_0, stat_1;
 
@@ -109,37 +109,37 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	rc = zlog_init(CONFIG);
+	rc = cdlog_init(CONFIG);
 	if (rc) {
 		printf("main init failed\n");
 		return -2;
 	}
 
-	zc = zlog_get_category("main");
+	zc = cdlog_get_category("main");
 	if (!zc) {
 		printf("main get cat fail\n");
-		zlog_fini();
+		cdlog_fini();
 		return -3;
 	}
 
-	mc = zlog_get_category("clsn");
+	mc = cdlog_get_category("clsn");
 	if (!mc) {
 		printf("clsn get cat fail\n");
-		zlog_fini();
+		cdlog_fini();
 		return -3;
 	}
 
-	hl = zlog_get_category("high");
+	hl = cdlog_get_category("high");
 	if (!hl) {
 		printf("high get cat fail\n");
-		zlog_fini();
+		cdlog_fini();
 		return -3;
 	}
 
 	/* Interrupt (ANSI).		<Ctrl-C> */
 	if (signal(SIGINT, intercept) == SIG_IGN )
 	{
-		zlog_fatal(zc, "Can't caught the signal SIGINT, Interrupt (ANSI)");
+		cdlog_fatal(zc, "Can't caught the signal SIGINT, Interrupt (ANSI)");
 		signal(SIGINT, SIG_IGN );
 		return -4;
 	}
@@ -153,8 +153,8 @@ int main(int argc, char** argv)
 		tinfo[i].zc = zc;
 		if(pthread_create(&tinfo[i].thread_id, NULL, myThread, &tinfo[i]) != 0)
 		{
-			zlog_fatal(zc, "Unable to start thread %d", i);
-			zlog_fini();
+			cdlog_fatal(zc, "Unable to start thread %d", i);
+			cdlog_fini();
 			return(-5);
 		}
     }
@@ -163,16 +163,16 @@ int main(int argc, char** argv)
 	sleep(1);
 	for (i=0; i<NB_THREADS; i++)
 	{
-		zlog_info(zc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, tinfo[i].zc);
-		zlog_fatal(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_error(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_warn(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_notice(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_info(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_trace(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_debug(mc, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, mc);
-		zlog_security(hl, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, hl);
-		zlog_warn(hl, "Thread [%d], zlog_category:@%p", tinfo[i].thread_num, hl);
+		cdlog_info(zc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, tinfo[i].zc);
+		cdlog_fatal(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_error(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_warn(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_notice(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_info(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_trace(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_debug(mc, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, mc);
+		cdlog_security(hl, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, hl);
+		cdlog_warn(hl, "Thread [%d], cdlog_category:@%p", tinfo[i].thread_num, hl);
     }
 
 	/* Log main loop status */
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 
 		sleep(1);
 		i++;
-		zlog_info(zc, "Running time: %02d:%02d:%02d", i/3600, (i/60)%60, i%60);
+		cdlog_info(zc, "Running time: %02d:%02d:%02d", i/3600, (i/60)%60, i%60);
 
 		/* Check configuration file update */
 		stat(CONFIG, &stat_1);
@@ -198,13 +198,13 @@ int main(int argc, char** argv)
 
 		if (reload)
 		{
-			zlog_info(zc, "Will reload configuration...");
-			rc = zlog_reload(CONFIG);
+			cdlog_info(zc, "Will reload configuration...");
+			rc = cdlog_reload(CONFIG);
 			if (rc) {
 				printf("main init failed\n");
 				return -6;
 			}
-			zlog_info(zc, "Configuration reloaded :)");
+			cdlog_info(zc, "Configuration reloaded :)");
 			stat(CONFIG, &stat_0);
 		}
 	}

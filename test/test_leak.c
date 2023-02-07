@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "zlog.h"
+#include "cdlog.h"
 
 int main(int argc, char** argv)
 {
@@ -25,32 +25,32 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	rc = zlog_init("test_leak.conf");
+	rc = cdlog_init("test_leak.conf");
 
 	k = atoi(argv[1]);
 	while (k-- > 0) {
 		i = rand();
 		switch (i % 4) {
 		case 0:
-			rc = dzlog_init("test_leak.conf", "xxx");
-			dzlog_info("init, rc=[%d]", rc);
+			rc = dcdlog_init("test_leak.conf", "xxx");
+			dcdlog_info("init, rc=[%d]", rc);
 			break;
 		case 1:
-			rc = zlog_reload(NULL);
-			dzlog_info("reload null, rc=[%d]", rc);
+			rc = cdlog_reload(NULL);
+			dcdlog_info("reload null, rc=[%d]", rc);
 			break;
 		case 2:
-			rc = zlog_reload("test_leak.2.conf");
-			dzlog_info("reload 2, rc=[%d]", rc);
+			rc = cdlog_reload("test_leak.2.conf");
+			dcdlog_info("reload 2, rc=[%d]", rc);
 			break;
 		case 3:
-			zlog_fini();
+			cdlog_fini();
 			printf("fini\n");
-	//		printf("zlog_finish\tj=[%d], rc=[%d]\n", j, rc);
+	//		printf("cdlog_finish\tj=[%d], rc=[%d]\n", j, rc);
 			break;
 		}
 	}
 
-	zlog_fini();
+	cdlog_fini();
 	return 0;
 }

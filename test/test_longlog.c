@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -7,7 +7,7 @@
  */
 
 #include <stdio.h>
-#include "zlog.h"
+#include "cdlog.h"
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -23,23 +23,23 @@ int main(int argc, char** argv)
 {
 	int i, k;
 	int rc;
-	zlog_category_t *zc;
+	cdlog_category_t *zc;
 
 	if (argc != 2) {
 		printf("useage: test_longlog [count]\n");
 		exit(1);
 	}
 
-	rc = zlog_init("test_longlog.conf");
+	rc = cdlog_init("test_longlog.conf");
 	if (rc) {
 		printf("init failed\n");
 		return -1;
 	}
 
-	zc = zlog_get_category("my_cat");
+	zc = cdlog_get_category("my_cat");
 	if (!zc) {
 		printf("get cat fail\n");
-		zlog_fini();
+		cdlog_fini();
 		return -2;
 	}
 
@@ -48,19 +48,19 @@ int main(int argc, char** argv)
 		i = rand();
 		switch (i % 3) {
 		case 0:
-			zlog_info(zc, str32);
+			cdlog_info(zc, str32);
 			break;
 		case 1:
-			zlog_info(zc, str64);
+			cdlog_info(zc, str64);
 			break;
 		case 2:
-			zlog_info(zc, str16);
+			cdlog_info(zc, str16);
 			break;
 		}
 	}
 
 
-	zlog_fini();
+	cdlog_fini();
 	
 	return 0;
 }

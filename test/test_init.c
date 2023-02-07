@@ -1,5 +1,5 @@
 /*
- * This file is part of the zlog Library.
+ * This file is part of the cdlog Library.
  *
  * Copyright (C) 2011 by Hardy Simpson <HardySimpson1984@gmail.com>
  *
@@ -12,45 +12,45 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "zlog.h"
+#include "cdlog.h"
 
 int main(int argc, char** argv)
 {
 	int rc;
 	
-	zlog_category_t *zc;
+	cdlog_category_t *zc;
 
-	rc = zlog_init("test_init.conf");
+	rc = cdlog_init("test_init.conf");
 	if (rc) {
 		printf("init fail");
 		return -2;
 	}
-	zc = zlog_get_category("my_cat");
+	zc = cdlog_get_category("my_cat");
 	if (!zc) {
-		printf("zlog_get_category fail\n");
-		zlog_fini();
+		printf("cdlog_get_category fail\n");
+		cdlog_fini();
 		return -1;
 	}
-	zlog_info(zc, "before update");
+	cdlog_info(zc, "before update");
 	sleep(1);
-	rc = zlog_reload("test_init.2.conf");
+	rc = cdlog_reload("test_init.2.conf");
 	if (rc) {
 		printf("update fail\n");
 	}
-	zlog_info(zc, "after update");
-	zlog_profile();
-	zlog_fini();
+	cdlog_info(zc, "after update");
+	cdlog_profile();
+	cdlog_fini();
 
 	sleep(1);
-	zlog_init("test_init.conf");
-	zc = zlog_get_category("my_cat");
+	cdlog_init("test_init.conf");
+	zc = cdlog_get_category("my_cat");
 	if (!zc) {
-		printf("zlog_get_category fail\n");
-		zlog_fini();
+		printf("cdlog_get_category fail\n");
+		cdlog_fini();
 		return -1;
 	}
-	zlog_info(zc, "init again");
-	zlog_fini();
+	cdlog_info(zc, "init again");
+	cdlog_fini();
 	
 	return 0;
 }

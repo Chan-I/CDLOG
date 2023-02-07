@@ -28,7 +28,7 @@ exe = 		\
 all     :       $(exe)
 
 $(exe)  :       %:%.o
-	gcc -O2 -g -o $@ $^ -L../src -lzlog -lpthread -Wl,-rpath ../src
+	gcc -O2 -g -o $@ $^ -L../src -lcdlog -lpthread -Wl,-rpath ../src
 
 .c.o	:
 	gcc -O2 -g -Wall -D_GNU_SOURCE -o $@ -c $< -I. -I../src
