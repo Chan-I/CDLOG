@@ -3,6 +3,7 @@
 # This file is released under the LGPL 2.1 license, see the COPYING file
 
 OBJ=    \
+  address.o	\
   buf.o    \
   category.o    \
   category_table.o    \
@@ -31,10 +32,11 @@ ZLOG_MINOR=2
 
 # Fallback to gcc when $CC is not in $PATH.
 CC:=$(shell sh -c 'type $(CC) >/dev/null 2>/dev/null && echo $(CC) || echo gcc')
-OPTIMIZATION?=-O2
+OPTIMIZATION?=-O0
 WARNINGS=-Wall -Wstrict-prototypes -fwrapv
 DEBUG?= -g -ggdb
-REAL_CFLAGS=$(OPTIMIZATION) -fPIC -pthread $(CFLAGS) $(WARNINGS) $(DEBUG)
+LOG_REP_RESTFUL=-D__LOG_REP_RSTFL__
+REAL_CFLAGS=$(OPTIMIZATION) -fPIC -pthread $(CFLAGS) $(WARNINGS) $(DEBUG) $(LOG_REP_RESTFUL)
 REAL_LDFLAGS=$(LDFLAGS) -pthread
 
 DYLIBSUFFIX=so

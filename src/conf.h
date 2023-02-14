@@ -34,6 +34,9 @@ typedef struct cdlog_conf_s {
 	zc_arraylist_t *levels;
 	zc_arraylist_t *formats;
 	zc_arraylist_t *rules;
+#ifdef __LOG_REP_RSTFL__
+	zc_arraylist_t *addresses;
+#endif
 	int time_cache_count;
 } cdlog_conf_t;
 

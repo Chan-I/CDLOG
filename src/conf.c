@@ -20,6 +20,9 @@
 #include "conf.h"
 #include "rule.h"
 #include "format.h"
+#ifdef __LOG_REP_RSTFL__
+#include "address.h"
+#endif
 #include "level_list.h"
 #include "rotater.h"
 #include "zc_defs.h"
@@ -154,7 +157,13 @@ cdlog_conf_t *cdlog_conf_new(const char *confpath)
 		zc_error("init rule_list fail");
 		goto err;
 	}
-
+#ifdef __LOG_REP_RSTFL__
+	a_conf->addresses = zc_arraylist_new((zc_arraylist_del_fn) cdlog_address_del);
+	if (!a_conf->addresses) {
+		zc_error("init address_list fail");
+		goto err;
+	}
+#endif
 	if (has_conf_file) {
 		if (cdlog_conf_build_with_file(a_conf)) {
 			zc_error("cdlog_conf_build_with_file fail");
@@ -231,7 +240,12 @@ static int cdlog_conf_build_with_file(cdlog_conf_t * a_conf)
 	int in_quotation = 0;
 
 	int section = 0;
+
+#ifndef __LOG_REP_RSTFL__
 	/* [global:1] [levels:2] [formats:3] [rules:4] */
+#else
+	/* [global:1] [levels:2] [formats:3] [rules:4] [address:5] */
+#endif
 
 	if (lstat(a_conf->file, &a_stat)) {
 		zc_error("lstat conf file[%s] fail, errno[%d]", a_conf->file,
@@ -338,6 +352,9 @@ static int cdlog_conf_parse_line(cdlog_conf_t * a_conf, char *line, int *section
 	char word_2[MAXLEN_CFG_LINE + 1];
 	char word_3[MAXLEN_CFG_LINE + 1];
 	char value[MAXLEN_CFG_LINE + 1];
+#ifdef __LOG_REP_RSTFL__
+	cdlog_address_t *a_address = NULL;
+#endif
 	cdlog_format_t *a_format = NULL;
 	cdlog_rule_t *a_rule = NULL;
 
@@ -359,6 +376,10 @@ static int cdlog_conf_parse_line(cdlog_conf_t * a_conf, char *line, int *section
 			*section = 3;
 		} else if (STRCMP(name, ==, "rules")) {
 			*section = 4;
+#ifdef __LOG_REP_RSTFL__
+		} else if (STRCMP(name, ==, "address")) {
+			*section = 5;
+#endif
 		} else {
 			zc_error("wrong section name[%s]", name);
 			return -1;
@@ -494,6 +515,31 @@ static int cdlog_conf_parse_line(cdlog_conf_t * a_conf, char *line, int *section
 			return -1;
 		}
 		break;
+#ifdef __LOG_REP_RSTFL__
+	case 5:
+		/* 
+		 * TO DO:
+		 * 		 modify address tags in conf file. 
+		 * 	
+		 * 
+		 * line:  
+		 *       restful url="1asdlfkasldkjfl1j2lkjlkjfalsdkfjlsdf"
+		 */
+
+		a_address = cdlog_address_new(line, &(a_conf->time_cache_count));
+
+		if (!a_address) {
+			zc_error("cdlog_address_new fail [%s]", line);
+			if (a_conf->strict_init) return -1;
+			else break;
+		}
+		if (zc_arraylist_add(a_conf->addresses, a_address)) {
+			cdlog_address_del(a_address);
+			zc_error("zc_arraylist_add fail");
+			return -1;
+		}
+		break;
+#endif
 	default:
 		zc_error("not in any section");
 		return -1;
