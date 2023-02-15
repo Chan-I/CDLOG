@@ -41,6 +41,10 @@ struct cdlog_rule_s {
 
 	unsigned int file_perms;
 	int file_open_flags;
+	
+#ifdef __cdlog_rule_h
+	int need_restful;
+#endif
 
 	char file_path[MAXLEN_PATH + 1];
 	zc_arraylist_t *dynamic_specs;

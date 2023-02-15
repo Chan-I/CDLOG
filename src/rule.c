@@ -468,6 +468,25 @@ static int cdlog_rule_output_stderr(cdlog_rule_t * a_rule,
 
 	return 0;
 }
+#ifdef __LOG_REP_RSTFL__
+static int cdlog_rule_output_restful(cdlog_rule_t * a_rule,
+				   cdlog_thread_t * a_thread)
+{
+	if (cdlog_format_gen_msg(a_rule->format, a_thread)) {
+		zc_error("cdlog_format_gen_msg fail");
+		return -1;
+	}
+
+	/* CHANGE IT TO RESTFUL. */
+	if (write(STDOUT_FILENO,
+		cdlog_buf_str(a_thread->msg_buf), cdlog_buf_len(a_thread->msg_buf)) < 0) {
+		zc_error("write fail, errno[%d]", errno);
+		return -1;
+	}
+
+	return 0;
+}
+#endif
 /*******************************************************************************/
 static int syslog_facility_atoi(char *facility)
 {
@@ -572,6 +591,15 @@ cdlog_rule_t *cdlog_rule_new(char *line,
 	int rc = 0;
 	int nscan = 0;
 	int nread = 0;
+#ifdef __LOG_REP_RSTFL__
+	/*
+	 *	Wether to use restful.
+	 *		flag	0	no
+	 *				1	yes
+	 */
+	char rest[MAXLEN_CFG_LINE + 1];		/*  */
+	char rst_kw[10];	/* restful keyword */
+#endif
 	cdlog_rule_t *a_rule;
 
 	char selector[MAXLEN_CFG_LINE + 1];
@@ -621,6 +649,15 @@ cdlog_rule_t *cdlog_rule_new(char *line,
 	 */
 	memset(category, 0x00, sizeof(category));
 	memset(level, 0x00, sizeof(level));
+
+#ifdef __LOG_REP_RSTFL__
+	if (strchr(selector, ':') == NULL) {
+	/* selector	myc_cat.*	
+	 * category	my_cat
+	 * level	*
+	 */
+#endif
+	a_rule->need_restful = 0;
 	nscan = sscanf(selector, " %[^.].%s", category, level);
 	if (nscan != 2) {
 		zc_error("sscanf [%s] fail, category or level is null",
@@ -635,6 +672,47 @@ cdlog_rule_t *cdlog_rule_new(char *line,
 			goto err;
 		}
 	}
+#ifdef __LOG_REP_RSTFL__
+	}
+	/*
+	 * line			restful:myc_cat.*		"http://localhost:8080/data/pages=1.idex"
+	 * category		restful:my_cat
+	 * level		*
+	 */
+	else {
+		/* selector	restful:myc_cat.*
+		 * rest		restful:my_cat
+		 * category	my_cat
+		 * leve		*
+		 */
+		memset(rst_kw, 0x00, sizeof(rst_kw));
+		memset(rest, 0x00, sizeof(rest));
+		a_rule->need_restful = 1;
+		nscan = sscanf(selector, " %[^.].%s", rest, level);
+		if (nscan != 2) {
+			zc_error("sscanf [%s] fail, category or level is null",
+				selector);
+			goto err;
+		}
+
+		nscan = sscanf(rest, "%[^:]:%s", rst_kw, category);
+		if (nscan != 2) {
+			zc_error("sscanf [%s] fail, category or level is null",
+				selector);
+			goto err;
+		}
+		if (!STRICMP(rst_kw, ==, "restful")) {
+			zc_error("sscan [%s] fail, restful keyword must be [restful]", rst_kw);
+			goto err;
+		}
+		for (p = category; *p != '\0'; p++) {
+			if ((!isalnum(*p)) && (*p != '_') && (*p != '-') && (*p != '*') && (*p != '!')) {
+				zc_error("category name[%s] character is not in [a-Z][0-9][_!*-]", category);
+				goto err;
+			}
+		}
+	}
+#endif
 
 	/* as one line can't be longer than MAXLEN_CFG_LINE, same as category */
 	strcpy(a_rule->category, category);
@@ -832,6 +910,26 @@ cdlog_rule_t *cdlog_rule_new(char *line,
 			a_rule->static_dev = stb.st_dev;
 			a_rule->static_ino = stb.st_ino;
 		}
+		break;
+#ifdef __LOG_REP_RSTFL__
+	case '[':
+		if (!a_rule->need_restful) {
+			zc_error("restful url format error.");
+			goto err;
+		}
+		if (!p) p = file_path;
+		q = strchr(++p, ']');
+		if (!q) {
+			zc_error("matching ] not found in conf line[%s]", file_path);
+			goto err;
+		}
+		if (q - p > sizeof(file_path) - 1) {
+			zc_error("file_path too long %ld > %ld", q - p, sizeof(file_path) - 1);
+			goto err;
+		}
+		memcpy(a_rule->file_path, p , q - p);
+		a_rule->output = cdlog_rule_output_restful;
+#endif
 		break;
 	case '|' :
 		a_rule->pipe_fp = popen(output + 1, "w");
