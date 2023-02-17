@@ -701,7 +701,19 @@ cdlog_rule_t *cdlog_rule_new(char *line,
 				selector);
 			goto err;
 		}
-		if (!STRICMP(rst_kw, ==, "restful")) {
+		if (STRICMP(rst_kw, ==, "put")) {
+			a_rule->rst_mtd = RESTFUL_METHOD_PUT;
+		}
+		else if (STRICMP(rst_kw, ==, "post")) {
+			a_rule->rst_mtd = RESTFUL_METHOD_POST;
+		}
+		else if (STRICMP(rst_kw, ==, "get")) {
+			a_rule->rst_mtd = RESTFUL_METHOD_GET;
+		}
+		else if (STRICMP(rst_kw, ==, "delete")) {
+			a_rule->rst_mtd = RESTFUL_METHOD_DELETE;
+		}
+		else {
 			zc_error("sscan [%s] fail, restful keyword must be [restful]", rst_kw);
 			goto err;
 		}

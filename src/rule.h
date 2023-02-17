@@ -23,6 +23,18 @@
 #include "rotater.h"
 #include "record.h"
 
+#ifdef __LOG_REP_RSTFL__
+#define RESTFUL_METHOD_GET 1
+#define RESTFUL_METHOD_POST 2
+#define RESTFUL_METHOD_PUT 3
+#define RESTFUL_METHOD_DELETE 4
+typedef enum restful_method {
+	get = 1,
+	post = 2,
+	put = 3,
+	delete = 4
+} restful_method;
+#endif
 typedef struct cdlog_rule_s cdlog_rule_t;
 
 typedef int (*cdlog_rule_output_fn) (cdlog_rule_t * a_rule, cdlog_thread_t * a_thread);
@@ -44,6 +56,8 @@ struct cdlog_rule_s {
 	
 #ifdef __cdlog_rule_h
 	int need_restful;
+	restful_method rst_mtd;
+	char restful_address[MAXLEN_PATH + 1];
 #endif
 
 	char file_path[MAXLEN_PATH + 1];
