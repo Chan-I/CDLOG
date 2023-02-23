@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 	int rc;
 	cdlog_category_t *zc;
 
-	rc = cdlog_init("test_level.conf");
+	rc = cdlog_init("test_level.lg");
 	if (rc) {
 		printf("init failed\n");
 		return -1;
@@ -27,10 +27,12 @@ int main(int argc, char** argv)
 		return -2;
 	}
 
-	cdlog_trace(zc, "hello, cdlog - trace");
+	
 	cdlog_debug(zc, "hello, cdlog - debug");
 	cdlog_info(zc, "hello, cdlog - info");
-
+	cdlog_warn(zc, "hello, cdlog - warn");
+	cdlog_error(zc, "hello, cdlog - error");
+	cdlog_fatal(zc, "hello, cdlog - fatal");
 	cdlog_fini();
 	
 	return 0;

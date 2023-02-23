@@ -20,7 +20,7 @@
 #ifndef __test_level_h
 #define __test_level_h
 
-#include "zlog.h"
+#include "cdlog.h"
 
 enum {
 	ZLOG_LEVEL_TRACE = 30,

@@ -329,7 +329,9 @@ exit:
 cdlog_category_t *cdlog_get_category(const char *cname)
 {
 	int rc = 0;
+	cdlog_rule_t *new_rule;
 	cdlog_category_t *a_category = NULL;
+	char cfg_line[MAXLEN_CFG_LINE + 1];
 
 	zc_assert(cname, NULL);
 	zc_debug("------cdlog_get_category[%s] start------", cname);
@@ -343,6 +345,32 @@ cdlog_category_t *cdlog_get_category(const char *cname)
 		zc_error("never call cdlog_init() or dcdlog_init() before");
 		a_category = NULL;
 		goto err;
+	}
+
+	if (cdlog_env_conf->rules) {
+		zc_arraylist_del(cdlog_env_conf->rules);
+		memset(cfg_line, 0x00, sizeof(cfg_line));
+		sprintf(cfg_line, "%s.error\t\t\"%s\"", cname, cdlog_env_conf->file);
+
+		new_rule = cdlog_rule_new(
+			cfg_line,
+			cdlog_env_conf->levels,
+			cdlog_env_conf->default_format,
+			cdlog_env_conf->formats,
+			cdlog_env_conf->file_perms,
+			cdlog_env_conf->fsync_period,
+			&(cdlog_env_conf->time_cache_count)
+		);
+		if (!new_rule) {
+			zc_error("cdlog_env_conf change rule failed!");
+			goto err;
+		}
+		cdlog_env_conf->rules = zc_arraylist_new((zc_arraylist_del_fn) cdlog_rule_del);
+		if (zc_arraylist_add(cdlog_env_conf->rules, new_rule)) {
+			cdlog_rule_del(new_rule);
+			zc_error("zc_arraylist_add fail");
+			goto err;
+		}
 	}
 
 	a_category = cdlog_category_table_fetch_category(

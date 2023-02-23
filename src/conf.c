@@ -105,7 +105,7 @@ cdlog_conf_t *cdlog_conf_new(const char *confpath)
 		zc_error("calloc fail, errno[%d]", errno);
 		return NULL;
 	}
-
+/*
 	if (confpath && confpath[0] != '\0') {
 		nwrite = snprintf(a_conf->file, sizeof(a_conf->file), "%s", confpath);
 		has_conf_file = 1;
@@ -120,6 +120,19 @@ cdlog_conf_t *cdlog_conf_new(const char *confpath)
 		zc_error("not enough space for path name, nwrite=[%d], errno[%d]", nwrite, errno);
 		goto err;
 	}
+*/
+	if (confpath && confpath[0] != '\0') {
+		nwrite = snprintf(a_conf->file, sizeof(a_conf->file), "%s", confpath);
+	} else {
+		zc_error("logfile could not be null!");
+		return NULL;
+	}
+	if (nwrite < 0 || nwrite >= sizeof(a_conf->file)) {
+		zc_error("not enough space for path name, nwrite=[%d], errno[%d]", nwrite, errno);
+		goto err;
+	}
+	has_conf_file = 0;
+
 
 	/* set default configuration start */
 	a_conf->strict_init = 1;
@@ -177,6 +190,7 @@ err:
 static int cdlog_conf_build_without_file(cdlog_conf_t * a_conf)
 {
 	cdlog_rule_t *default_rule;
+	char default_rule_line[MAXLEN_CFG_LINE + 1];
 
 	a_conf->default_format = cdlog_format_new(a_conf->default_format_line, &(a_conf->time_cache_count));
 	if (!a_conf->default_format) {
@@ -189,9 +203,11 @@ static int cdlog_conf_build_without_file(cdlog_conf_t * a_conf)
 		zc_error("cdlog_rotater_new fail");
 		return -1;
 	}
+	memset(default_rule_line, 0x00, sizeof(default_rule_line));
+	sprintf(default_rule_line, "*.*\t\t\t\"%s\"", a_conf->file);
 
 	default_rule = cdlog_rule_new(
-			ZLOG_CONF_DEFAULT_RULE,
+			default_rule_line,
 			a_conf->levels,
 			a_conf->default_format,
 			a_conf->formats,
