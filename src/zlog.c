@@ -13,6 +13,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <pthread.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include<sys/types.h>
 
 #include "conf.h"
 #include "category_table.h"
@@ -64,10 +67,153 @@ static void cdlog_clean_rest_thread(void)
 	return;
 }
 
+static int
+cdlog_conf_parse_line_bj(int *section, char *line, cdlog_bj_conf_t *a_bj)
+{
+	int nscan;
+	int nread;
+	char name[MAXLEN_CFG_LINE + 1];
+	char word_1[MAXLEN_CFG_LINE + 1];
+	char word_2[MAXLEN_CFG_LINE + 1];
+	char word_3[MAXLEN_CFG_LINE + 1];
+	char value[MAXLEN_CFG_LINE + 1];
+
+	if (strlen(line) > MAXLEN_CFG_LINE) {
+		zc_error("line_len[%ld] > MAXLEN_CFG_LINE[%ld], may cause overflow",
+			strlen(line), MAXLEN_CFG_LINE);
+		return -1;
+	}
+	if (line[0] == '[') {
+		int last_section = *section;
+		nscan = sscanf(line, "[ %[^] \t]", name);
+		if (STRCMP(name, ==, "global")) {
+			*section = 1;
+		} else if (STRCMP(name, ==, "classification")) {
+			*section = 2;
+		} else {
+			zc_error("wrong section name[%s]", name);
+			return -1;
+		}
+		if (last_section >= *section) {
+			zc_error("wrong sequence of section, must follow global->levels->formats->rules");
+			return -1;
+		}
+		return 0;
+	}
+	switch (*section) {
+	case 1:
+		memset(name, 0x00, sizeof(name));
+		memset(value, 0x00, sizeof(value));
+		nscan = sscanf(line, " %[^=]= %s ", name, value);
+		printf("name:%s\nvalue:%s\n", name, value);
+		break;
+	case 2:
+
+		break;
+	default:
+
+		break;
+	}
+
+	return 0;
+}
+
+static int
+cdlog_conf_Beijing(char * confpath_bak, const char * confpath)
+{
+	/*
+	 * 	confpath_bak	:	output file
+	 *	confpath		:	intput file
+	 */
+	struct stat a_stat;
+	cdlog_bj_conf_t a_bj;
+	FILE *fp  = NULL;
+	char line[MAXLEN_CFG_LINE + 1];
+	size_t line_len;
+	char *pline = NULL;
+	char *p = NULL;
+	int i = 0;
+	int section = 0;
+	int line_no = 0;
+	int in_quotation = 0;
+
+	/* global:1  classification:2 */
+
+	if (lstat(confpath, &a_stat)) {
+		zc_error("lstat conf file[%s] fail, errno[%d]", confpath);
+		return -1;
+	}
+	if ((fp = fopen(confpath, "r")) == NULL) {
+		zc_error("open configure file[%s] failed", confpath);
+		return -1;
+	}
+
+	pline = line;
+	memset(&line, 0x00, sizeof(line));
+	while (fgets((char *)pline, sizeof(line) - (pline - line), fp) != NULL) {
+		++line_no;
+		line_len = strlen(pline);
+		if (pline[line_len - 1] == '\n') {
+			pline[line_len - 1] = '\0';
+		}
+
+		p = pline;
+		while (*p && isspace((int) *p)) ++p;
+		if (*p == '\0' || *p == '#') continue;
+
+		for (i = 0; p[i] != '\0'; ++i) {
+			pline[i] = p[i];
+		}
+		pline[i] = '\0';
+
+		for (p = pline + strlen(pline) - 1; isspace((int)*p); ++p);
+
+		if (*p == '\\') {
+			if ((p - line) > MAXLEN_CFG_LINE - 30) {
+				pline = line;
+			} else {
+				for (p--; isspace((int)*p); --p)
+					;
+				p++;
+				*p = 0;
+				pline = p;
+				continue;
+			}
+		} else {
+			pline = line;
+		}
+
+		*++p = '\0';
+
+		in_quotation = 0;
+		for (p = line; *p != '\0'; p++) {
+			if (*p == '"') {
+				in_quotation ^= 1;
+				continue;
+			}
+			
+			if (*p == '#' && !in_quotation) {
+				*p = '0';
+				break;
+			}
+		} //for
+		//printf("line:%s\n", line);
+		/*解析命令行内容*/
+		
+		if (-1 == cdlog_conf_parse_line_bj(&section, line, &a_bj)) {
+			zc_error("cdlog_conf_parse_line_bj failed");
+			return -1;
+		}
+	} //while
+
+}
+
+
+
 static int cdlog_init_inner(const char *confpath)
 {
 	int rc = 0;
-
+	char confpath_bak[MAXLEN_PATH];
 	/* the 1st time in the whole process do init */
 	if (cdlog_env_init_version == 0) {
 		/* clean up is done by OS when a thread call pthread_exit */
@@ -88,9 +234,14 @@ static int cdlog_init_inner(const char *confpath)
 		cdlog_env_init_version++;
 	} /* else maybe after cdlog_fini() and need not create pthread_key */
 
-	cdlog_env_conf = cdlog_conf_new(confpath);
+	if (-1 == cdlog_conf_Beijing(confpath_bak, confpath)) {
+		zc_error("cdlog_conf_Beijing failed!");
+		goto err;
+	}
+
+	cdlog_env_conf = cdlog_conf_new(confpath_bak);
 	if (!cdlog_env_conf) {
-		zc_error("cdlog_conf_new[%s] fail", confpath);
+		zc_error("cdlog_conf_new[%s] fail", confpath_bak);
 		goto err;
 	}
 

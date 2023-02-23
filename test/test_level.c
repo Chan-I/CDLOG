@@ -27,9 +27,11 @@ int main(int argc, char** argv)
 		return -2;
 	}
 
-	cdlog_trace(zc, "hello, cdlog - trace");
 	cdlog_debug(zc, "hello, cdlog - debug");
 	cdlog_info(zc, "hello, cdlog - info");
+	cdlog_warn(zc, "hellp, cdlog - warn");
+	cdlog_error(zc, "hello, cdlog - error");
+	cdlog_fatal(zc, "hello, cdlog - fatal");
 
 	cdlog_fini();
 	

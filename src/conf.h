@@ -13,6 +13,24 @@
 #include "format.h"
 #include "rotater.h"
 
+
+typedef struct cdlog_bj_class_s {
+	int log_level;
+	int db_level;
+	int report_leve;
+} cdlog_bj_class_t;
+
+typedef struct cdlog_bj_conf_s {
+	char logfile_name[MAXLEN_PATH + 1];			//存储文件名称
+	char report_url[4 * MAXLEN_PATH + 1];		//存储url地址
+	char db_connect[MAXLEN_PATH + 1];
+	int db_port;
+	char db_usr[MAXLEN_PATH + 1];
+	char db_pwd[MAXLEN_PATH + 1];
+
+	cdlog_bj_class_t level;
+} cdlog_bj_conf_t;
+
 typedef struct cdlog_conf_s {
 	char file[MAXLEN_PATH + 1];
 	char mtime[20 + 1];
